@@ -24,17 +24,37 @@ header {
     margin-bottom: 40px;
     padding: 20px 0;
     border-bottom: 1px solid #e1e4e8;
+    position: relative;
 }
 
 header h1 {
-    font-size: 2.5rem;
-    margin-bottom: 10px;
+    font-size: 2rem;
+    margin-bottom: 5px;
     color: #2c3e50;
+}
+
+header h2 {
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+    color: #3498db;
 }
 
 header p {
     font-size: 1.2rem;
     color: #7f8c8d;
+}
+
+.user-status {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.logged-in-status {
+    font-size: 0.9rem;
+    color: #2c3e50;
 }
 
 /* Main content styles */
@@ -63,6 +83,22 @@ section h3 {
     font-size: 1.4rem;
     margin-bottom: 15px;
     color: #2c3e50;
+}
+
+/* Admin actions section */
+.admin-actions {
+    background-color: #f8f9fa;
+    border-left: 4px solid #3498db;
+    margin-bottom: 30px;
+}
+
+.admin-actions h2 {
+    color: #3498db;
+    margin-bottom: 15px;
+}
+
+.admin-actions .btn {
+    margin-right: 15px;
 }
 
 /* Current usage section */
@@ -151,6 +187,73 @@ section h3 {
     margin-top: 20px;
 }
 
+/* Button styles */
+.btn {
+    display: inline-block;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background-color: #3498db;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.btn-small {
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+.btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Status messages */
+.status-progress {
+    color: #f39c12;
+    font-weight: 600;
+}
+
+.status-success {
+    color: #27ae60;
+    font-weight: 600;
+}
+
+.status-error {
+    color: #e74c3c;
+    font-weight: 600;
+}
+
+.info-message {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    border: 1px solid #c3e6cb;
+}
+
 /* Footer styles */
 footer {
     text-align: center;
@@ -172,12 +275,21 @@ footer {
     }
     
     header h1 {
-        font-size: 2rem;
+        font-size: 1.8rem;
+    }
+    
+    header h2 {
+        font-size: 1.5rem;
     }
     
     .history-table th,
     .history-table td {
         padding: 8px 10px;
         font-size: 0.9rem;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        font-size: 14px;
     }
 }

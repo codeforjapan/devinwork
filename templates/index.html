@@ -3,18 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Devin Credit Usage Tracker</title>
+    <title>{{ organization }} - Devin Credit Usage Tracker</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Devin Credit Usage Tracker</h1>
+            <h1>{{ organization }}</h1>
+            <h2>Devin Credit Usage Tracker</h2>
             <p>Monitor your Devin credit usage and limits</p>
+            <div class="user-status">
+                {% if session.get('logged_in') %}
+                <span class="logged-in-status">
+                    Logged in as: {{ session.get('user_id') }}
+                    {% if session.get('is_admin') %} (Admin){% endif %}
+                </span>
+                <a href="{{ url_for('logout') }}" class="btn btn-small">Logout</a>
+                {% else %}
+                <a href="{{ url_for('login') }}" class="btn btn-small">Admin Login</a>
+                {% endif %}
+            </div>
         </header>
         
         <main>
+            {% if session.get('is_admin') %}
+            <section class="admin-actions">
+                <h2>Admin Controls</h2>
+                <button id="manual-scrape-btn" class="btn btn-primary">Run Manual Scrape</button>
+                <span id="scrape-status"></span>
+            </section>
+            {% endif %}
+            
             <section class="current-usage">
                 <h2>Current Usage</h2>
                 <div class="usage-cards">
@@ -54,10 +74,13 @@
         </main>
         
         <footer>
-            <p>&copy; 2025 Code for Japan - Devin Credit Usage Tracker</p>
+            <p>&copy; 2025 {{ organization }} - Devin Credit Usage Tracker</p>
         </footer>
     </div>
     
+    <script>
+        window.isAdmin = {{ 'true' if session.get('is_admin') else 'false' }};
+    </script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>

@@ -9,22 +9,37 @@ A web application that tracks and displays Devin's credit usage and limits by sc
   - History page: https://app.devin.ai/settings/usage?tab=history (for Session, Created At, and ACUs Used)
 - Daily scheduled updates
 - Web interface to view current and historical usage data
+- Server-side login window for authentication
+- Admin-only manual scrape functionality
+- Public view for non-admin users
 
-## Authentication Note
+## Authentication
 
-The Devin platform uses email confirmation codes for authentication instead of passwords. This means:
+The Devin platform uses email confirmation codes for authentication instead of passwords. The application provides two ways to handle this:
 
-1. The scraper will submit your email address to the login form
-2. Devin will send a confirmation code to that email
-3. You need to provide this confirmation code to the scraper via the `DEVIN_CONFIRMATION_CODE` environment variable
+### 1. Server-Side Login Window
 
-**Important Limitation**: Since the confirmation codes are temporary and sent to email, fully automated scraping requires additional integration with an email API to retrieve the codes automatically. The current implementation requires manually updating the confirmation code in the `.env` file before each scraping run.
+The application now includes a two-step login process:
+1. Enter your user ID (email address)
+2. Enter the confirmation code sent to your email
+3. Use these credentials for scraping
 
-### Potential Solutions for Automation
+This approach allows you to:
+- Manually trigger scrapes after logging in (admin only)
+- View your credit usage data without modifying environment variables
+- Maintain a session for the duration of your browser session
 
-1. **Email API Integration**: Implement an integration with an email service API to automatically retrieve confirmation codes
-2. **Scheduled Manual Updates**: Run the scraper manually once a day after receiving the confirmation code
-3. **Extended Session Cookies**: Store and reuse session cookies if they remain valid for extended periods
+### 2. Environment Variables (Alternative)
+
+You can still use environment variables for automated scraping:
+1. Set `USER_ID` in your `.env` file
+2. Update `DEVIN_CONFIRMATION_CODE` with the latest code before running the scraper
+
+## Admin vs. Non-Admin Access
+
+- **Non-Admin Users**: Can view all credit usage data without logging in
+- **Admin Users**: Can log in and access additional features like manual scraping
+- Admin status is configured via the `ADMIN_USER` setting in the `.env` file
 
 ## Setup
 
@@ -52,8 +67,10 @@ The Devin platform uses email confirmation codes for authentication instead of p
 3. Configure the application:
    - Copy `.env.example` to `.env`
    - Update the configuration values in `.env`, including:
-     - `DEVIN_USERNAME`: Your Devin account email
-     - `DEVIN_CONFIRMATION_CODE`: The confirmation code sent to your email (needs to be updated before each run)
+     - `ORGANIZATION_NAME`: Your organization name (displayed in the UI)
+     - `USER_ID`: Your Devin account email
+     - `ADMIN_USER`: Set to "true" to enable admin features
+     - `FLASK_SECRET_KEY`: A secure random key for session management
 
 ### Running the Application
 
