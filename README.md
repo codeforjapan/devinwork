@@ -4,9 +4,27 @@ A web application that tracks and displays Devin's credit usage and limits by sc
 
 ## Features
 
-- Automated scraping of Devin credit usage data
+- Automated scraping of Devin credit usage data from:
+  - Main usage page: https://app.devin.ai/settings/usage (for Available ACUs)
+  - History page: https://app.devin.ai/settings/usage?tab=history (for Session, Created At, and ACUs Used)
 - Daily scheduled updates
 - Web interface to view current and historical usage data
+
+## Authentication Note
+
+The Devin platform uses email confirmation codes for authentication instead of passwords. This means:
+
+1. The scraper will submit your email address to the login form
+2. Devin will send a confirmation code to that email
+3. You need to provide this confirmation code to the scraper via the `DEVIN_CONFIRMATION_CODE` environment variable
+
+**Important Limitation**: Since the confirmation codes are temporary and sent to email, fully automated scraping requires additional integration with an email API to retrieve the codes automatically. The current implementation requires manually updating the confirmation code in the `.env` file before each scraping run.
+
+### Potential Solutions for Automation
+
+1. **Email API Integration**: Implement an integration with an email service API to automatically retrieve confirmation codes
+2. **Scheduled Manual Updates**: Run the scraper manually once a day after receiving the confirmation code
+3. **Extended Session Cookies**: Store and reuse session cookies if they remain valid for extended periods
 
 ## Setup
 
@@ -33,7 +51,9 @@ A web application that tracks and displays Devin's credit usage and limits by sc
 
 3. Configure the application:
    - Copy `.env.example` to `.env`
-   - Update the configuration values in `.env`
+   - Update the configuration values in `.env`, including:
+     - `DEVIN_USERNAME`: Your Devin account email
+     - `DEVIN_CONFIRMATION_CODE`: The confirmation code sent to your email (needs to be updated before each run)
 
 ### Running the Application
 
