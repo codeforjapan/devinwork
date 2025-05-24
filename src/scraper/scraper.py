@@ -56,7 +56,18 @@ class DevinCreditScraper:
         return driver
     
     def login(self, driver):
-        """Log in to the Devin platform."""
+        """
+        Log in to the Devin platform using email confirmation code.
+        
+        This method handles the email-based authentication flow where:
+        1. User enters email address
+        2. System sends a confirmation code to the email
+        3. User enters the confirmation code
+        
+        Note: This requires manual intervention to retrieve the confirmation code
+        from the email. In a production environment, you would need to implement
+        an email API integration to automatically retrieve the code.
+        """
         try:
             logger.info("Attempting to log in...")
             
@@ -69,7 +80,6 @@ class DevinCreditScraper:
                     EC.presence_of_element_located((By.ID, "email"))
                 )
                 email_field = driver.find_element(By.ID, "email")
-                password_field = driver.find_element(By.ID, "password")
             except (NoSuchElementException, TimeoutException):
                 # Try alternative selectors
                 try:
@@ -77,17 +87,14 @@ class DevinCreditScraper:
                         EC.presence_of_element_located((By.NAME, "email"))
                     )
                     email_field = driver.find_element(By.NAME, "email")
-                    password_field = driver.find_element(By.NAME, "password")
                 except (NoSuchElementException, TimeoutException):
                     WebDriverWait(driver, 10).until(
                         EC.presence_of_element_located((By.XPATH, "//input[@type='email']"))
                     )
                     email_field = driver.find_element(By.XPATH, "//input[@type='email']")
-                    password_field = driver.find_element(By.XPATH, "//input[@type='password']")
             
-            # Fill in login credentials
+            # Fill in email address
             email_field.send_keys(self.username)
-            password_field.send_keys(self.password)
             
             try:
                 submit_button = driver.find_element(By.XPATH, "//button[@type='submit']")
@@ -95,19 +102,67 @@ class DevinCreditScraper:
                 try:
                     submit_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Sign in')]")
                 except NoSuchElementException:
-                    submit_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Log in')]")
+                    try:
+                        submit_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Log in')]")
+                    except NoSuchElementException:
+                        submit_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Continue')]")
             
             submit_button.click()
             
-            # Wait for successful login - check for redirect to dashboard or settings
-            WebDriverWait(driver, 15).until(
-                lambda d: "login" not in d.current_url
-            )
+            logger.info("Email submitted, waiting for confirmation code input field...")
             
-            logger.info(f"Login successful, current URL: {driver.current_url}")
-            return True
+            # Wait for confirmation code input field to appear
+            try:
+                WebDriverWait(driver, 10).until(
+                    lambda d: len(d.find_elements(By.XPATH, "//input[contains(@placeholder, 'code') or contains(@aria-label, 'code')]")) > 0 or
+                             len(d.find_elements(By.XPATH, "//input[contains(@id, 'code') or contains(@name, 'code')]")) > 0
+                )
+                
+                code_field = None
+                try:
+                    code_field = driver.find_element(By.XPATH, "//input[contains(@placeholder, 'code') or contains(@aria-label, 'code')]")
+                except NoSuchElementException:
+                    code_field = driver.find_element(By.XPATH, "//input[contains(@id, 'code') or contains(@name, 'code')]")
+                
+                confirmation_code = os.getenv("DEVIN_CONFIRMATION_CODE")
+                
+                if not confirmation_code:
+                    logger.error("No confirmation code provided in environment variables")
+                    driver.save_screenshot("confirmation_code_needed.png")
+                    logger.info("Screenshot saved as 'confirmation_code_needed.png'")
+                    return False
+                
+                code_field.send_keys(confirmation_code)
+                
+                try:
+                    verify_button = driver.find_element(By.XPATH, "//button[@type='submit']")
+                except NoSuchElementException:
+                    try:
+                        verify_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Verify')]")
+                    except NoSuchElementException:
+                        try:
+                            verify_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Submit')]")
+                        except NoSuchElementException:
+                            verify_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Continue')]")
+                
+                verify_button.click()
+                
+                # Wait for successful login - check for redirect to dashboard or settings
+                WebDriverWait(driver, 15).until(
+                    lambda d: "login" not in d.current_url
+                )
+                
+                logger.info(f"Login successful, current URL: {driver.current_url}")
+                return True
+                
+            except (NoSuchElementException, TimeoutException) as e:
+                logger.error(f"Could not find confirmation code input field: {str(e)}")
+                driver.save_screenshot("login_error.png")
+                return False
+                
         except Exception as e:
             logger.error(f"Login failed: {str(e)}")
+            driver.save_screenshot("login_error.png")
             return False
     
     def extract_current_usage(self, driver):
