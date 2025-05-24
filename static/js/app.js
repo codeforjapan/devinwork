@@ -3,6 +3,8 @@ const availableACUsElement = document.querySelector('#available-acus .value');
 const lastUpdatedElement = document.getElementById('last-updated-time');
 const historyTableBody = document.querySelector('#history-table tbody');
 const usageChartCanvas = document.getElementById('usage-chart');
+const manualScrapeBtn = document.getElementById('manual-scrape-btn');
+const scrapeStatusElement = document.getElementById('scrape-status');
 
 // Chart instance
 let usageChart;
@@ -174,10 +176,53 @@ async function fetchUsageHistory() {
     }
 }
 
+function setupManualScrape() {
+    if (!manualScrapeBtn || !window.isAdmin) return;
+    
+    manualScrapeBtn.addEventListener('click', async () => {
+        try {
+            manualScrapeBtn.disabled = true;
+            scrapeStatusElement.textContent = 'Scraping in progress...';
+            scrapeStatusElement.className = 'status-progress';
+            
+            const response = await fetch('/api/run-scrape', {
+                method: 'POST'
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                scrapeStatusElement.textContent = 'Scrape completed successfully!';
+                scrapeStatusElement.className = 'status-success';
+                // Refresh data after successful scrape
+                setTimeout(() => {
+                    fetchLatestCreditData();
+                    fetchUsageHistory();
+                }, 1000);
+            } else {
+                scrapeStatusElement.textContent = `Scrape failed: ${result.error || 'Unknown error'}`;
+                scrapeStatusElement.className = 'status-error';
+            }
+        } catch (error) {
+            console.error('Error running manual scrape:', error);
+            scrapeStatusElement.textContent = 'Scrape failed due to an error';
+            scrapeStatusElement.className = 'status-error';
+        } finally {
+            setTimeout(() => {
+                manualScrapeBtn.disabled = false;
+                scrapeStatusElement.textContent = '';
+                scrapeStatusElement.className = '';
+            }, 5000);
+        }
+    });
+}
+
 // Initialize the application
 function init() {
     fetchLatestCreditData();
     fetchUsageHistory();
+    
+    setupManualScrape();
     
     // Refresh data every 5 minutes
     setInterval(() => {
