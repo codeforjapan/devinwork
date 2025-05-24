@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./data:/app/data
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  scheduler:
+    build: .
+    volumes:
+      - ./data:/app/data
+    env_file:
+      - .env
+    command: python src/scraper/scheduler.py
+    restart: unless-stopped

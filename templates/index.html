@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devin Credit Usage Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Devin Credit Usage Tracker</h1>
+            <p>Monitor your Devin credit usage and limits</p>
+        </header>
+        
+        <main>
+            <section class="current-usage">
+                <h2>Current Usage</h2>
+                <div class="usage-cards">
+                    <div class="card" id="credit-used">
+                        <h3>Credits Used</h3>
+                        <div class="value">Loading...</div>
+                    </div>
+                    <div class="card" id="credit-limit">
+                        <h3>Credit Limit</h3>
+                        <div class="value">Loading...</div>
+                    </div>
+                    <div class="card" id="credit-remaining">
+                        <h3>Credits Remaining</h3>
+                        <div class="value">Loading...</div>
+                    </div>
+                </div>
+                <div class="last-updated">
+                    Last updated: <span id="last-updated-time">Loading...</span>
+                </div>
+            </section>
+            
+            <section class="usage-history">
+                <h2>Usage History</h2>
+                <div class="chart-container">
+                    <canvas id="usage-chart"></canvas>
+                </div>
+            </section>
+        </main>
+        
+        <footer>
+            <p>&copy; 2025 Code for Japan - Devin Credit Usage Tracker</p>
+        </footer>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+# Web scraping
+selenium==4.15.2
+webdriver-manager==4.0.1
+
+# Web server
+flask==2.3.3
+flask-cors==4.0.0
+
+# Scheduling
+apscheduler==3.10.4
+
+# Data handling
+pandas==2.1.1
+
+# Environment variables
+python-dotenv==1.0.0
