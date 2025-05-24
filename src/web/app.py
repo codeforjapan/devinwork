@@ -24,6 +24,28 @@ def load_credit_data():
             return json.load(f)
     return []
 
+def process_credit_data(data):
+    """Process the raw credit data into a format suitable for the UI."""
+    processed_data = []
+    
+    for entry in data:
+        timestamp = entry.get("timestamp", "")
+        
+        current_usage = entry.get("current_usage", {})
+        available_acus = current_usage.get("available_acus", "Unknown")
+        
+        usage_history = entry.get("usage_history", [])
+        
+        processed_entry = {
+            "timestamp": timestamp,
+            "available_acus": available_acus,
+            "usage_history": usage_history
+        }
+        
+        processed_data.append(processed_entry)
+    
+    return processed_data
+
 @app.route('/')
 def index():
     """Render the main page."""
@@ -31,17 +53,29 @@ def index():
 
 @app.route('/api/credit-data')
 def get_credit_data():
-    """API endpoint to get the credit data."""
+    """API endpoint to get all credit data."""
     data = load_credit_data()
-    return jsonify(data)
+    processed_data = process_credit_data(data)
+    return jsonify(processed_data)
 
 @app.route('/api/latest-credit-data')
 def get_latest_credit_data():
     """API endpoint to get the latest credit data."""
     data = load_credit_data()
     if data:
-        return jsonify(data[-1])
+        processed_data = process_credit_data([data[-1]])
+        return jsonify(processed_data[0])
     return jsonify({})
+
+@app.route('/api/usage-history')
+def get_usage_history():
+    """API endpoint to get the usage history from the latest data."""
+    data = load_credit_data()
+    if data and len(data) > 0:
+        latest_data = data[-1]
+        usage_history = latest_data.get("usage_history", [])
+        return jsonify(usage_history)
+    return jsonify([])
 
 if __name__ == '__main__':
     port = int(os.getenv("PORT", "5000"))

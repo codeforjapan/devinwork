@@ -1,8 +1,7 @@
 // DOM Elements
-const creditUsedElement = document.querySelector('#credit-used .value');
-const creditLimitElement = document.querySelector('#credit-limit .value');
-const creditRemainingElement = document.querySelector('#credit-remaining .value');
+const availableACUsElement = document.querySelector('#available-acus .value');
 const lastUpdatedElement = document.getElementById('last-updated-time');
+const historyTableBody = document.querySelector('#history-table tbody');
 const usageChartCanvas = document.getElementById('usage-chart');
 
 // Chart instance
@@ -16,61 +15,92 @@ function formatDate(dateString) {
 
 // Format number with commas
 function formatNumber(num) {
+    if (isNaN(num)) return "Unknown";
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
-// Calculate remaining credits
-function calculateRemaining(used, limit) {
-    return Math.max(0, limit - used);
+// Extract number from string
+function extractNumber(str) {
+    if (!str) return NaN;
+    const match = str.toString().match(/\d+/);
+    return match ? parseInt(match[0], 10) : NaN;
 }
 
 // Update the current usage display
 function updateCurrentUsage(data) {
     if (!data || Object.keys(data).length === 0) {
-        creditUsedElement.textContent = 'No data';
-        creditLimitElement.textContent = 'No data';
-        creditRemainingElement.textContent = 'No data';
+        availableACUsElement.textContent = 'No data';
         lastUpdatedElement.textContent = 'Never';
         return;
     }
     
-    // Extract values (assuming they're numeric strings)
-    const creditUsed = parseInt(data.credit_used.replace(/[^0-9]/g, ''), 10);
-    const creditLimit = parseInt(data.credit_limit.replace(/[^0-9]/g, ''), 10);
-    const remaining = calculateRemaining(creditUsed, creditLimit);
+    // Extract available ACUs value
+    const availableACUs = extractNumber(data.available_acus);
     
     // Update the display
-    creditUsedElement.textContent = formatNumber(creditUsed);
-    creditLimitElement.textContent = formatNumber(creditLimit);
-    creditRemainingElement.textContent = formatNumber(remaining);
+    availableACUsElement.textContent = formatNumber(availableACUs);
     lastUpdatedElement.textContent = formatDate(data.timestamp);
 }
 
-// Create or update the usage history chart
-function updateUsageChart(data) {
-    if (!data || data.length === 0) {
+// Update the history table
+function updateHistoryTable(historyData) {
+    historyTableBody.innerHTML = '';
+    
+    if (!historyData || historyData.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = '<td colspan="3" class="loading-message">No history data available</td>';
+        historyTableBody.appendChild(row);
         return;
     }
     
+    historyData.forEach(item => {
+        const row = document.createElement('tr');
+        
+        const sessionCell = document.createElement('td');
+        sessionCell.textContent = item.session_name || 'Unknown';
+        
+        const createdAtCell = document.createElement('td');
+        createdAtCell.textContent = item.created_at || 'Unknown';
+        
+        const acusUsedCell = document.createElement('td');
+        acusUsedCell.textContent = item.acus_used || 'Unknown';
+        
+        row.appendChild(sessionCell);
+        row.appendChild(createdAtCell);
+        row.appendChild(acusUsedCell);
+        
+        historyTableBody.appendChild(row);
+    });
+}
+
+// Create or update the usage history chart
+function updateUsageChart(historyData) {
+    if (!historyData || historyData.length === 0) {
+        return;
+    }
+    
+    historyData.sort((a, b) => {
+        return new Date(a.created_at) - new Date(b.created_at);
+    });
+    
     // Prepare data for the chart
-    const labels = data.map(item => {
-        const date = new Date(item.timestamp);
-        return date.toLocaleDateString();
+    const labels = historyData.map(item => {
+        try {
+            const date = new Date(item.created_at);
+            return date.toLocaleDateString();
+        } catch (e) {
+            return item.created_at || 'Unknown';
+        }
     });
     
-    const usedValues = data.map(item => {
-        return parseInt(item.credit_used.replace(/[^0-9]/g, ''), 10);
-    });
-    
-    const limitValues = data.map(item => {
-        return parseInt(item.credit_limit.replace(/[^0-9]/g, ''), 10);
+    const acusUsedValues = historyData.map(item => {
+        return extractNumber(item.acus_used) || 0;
     });
     
     // Create or update the chart
     if (usageChart) {
         usageChart.data.labels = labels;
-        usageChart.data.datasets[0].data = usedValues;
-        usageChart.data.datasets[1].data = limitValues;
+        usageChart.data.datasets[0].data = acusUsedValues;
         usageChart.update();
     } else {
         usageChart = new Chart(usageChartCanvas, {
@@ -79,19 +109,10 @@ function updateUsageChart(data) {
                 labels: labels,
                 datasets: [
                     {
-                        label: 'Credits Used',
-                        data: usedValues,
+                        label: 'ACUs Used',
+                        data: acusUsedValues,
                         borderColor: '#e74c3c',
                         backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4
-                    },
-                    {
-                        label: 'Credit Limit',
-                        data: limitValues,
-                        borderColor: '#3498db',
-                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
                         borderWidth: 2,
                         fill: true,
                         tension: 0.4
@@ -115,7 +136,7 @@ function updateUsageChart(data) {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Credits'
+                            text: 'ACUs Used'
                         }
                     },
                     x: {
@@ -138,32 +159,30 @@ async function fetchLatestCreditData() {
         updateCurrentUsage(data);
     } catch (error) {
         console.error('Error fetching latest credit data:', error);
-        creditUsedElement.textContent = 'Error';
-        creditLimitElement.textContent = 'Error';
-        creditRemainingElement.textContent = 'Error';
+        availableACUsElement.textContent = 'Error';
     }
 }
 
-// Fetch all credit data for the chart
-async function fetchAllCreditData() {
+async function fetchUsageHistory() {
     try {
-        const response = await fetch('/api/credit-data');
+        const response = await fetch('/api/usage-history');
         const data = await response.json();
+        updateHistoryTable(data);
         updateUsageChart(data);
     } catch (error) {
-        console.error('Error fetching credit data history:', error);
+        console.error('Error fetching usage history:', error);
     }
 }
 
 // Initialize the application
 function init() {
     fetchLatestCreditData();
-    fetchAllCreditData();
+    fetchUsageHistory();
     
     // Refresh data every 5 minutes
     setInterval(() => {
         fetchLatestCreditData();
-        fetchAllCreditData();
+        fetchUsageHistory();
     }, 5 * 60 * 1000);
 }
 

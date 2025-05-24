@@ -18,16 +18,8 @@
             <section class="current-usage">
                 <h2>Current Usage</h2>
                 <div class="usage-cards">
-                    <div class="card" id="credit-used">
-                        <h3>Credits Used</h3>
-                        <div class="value">Loading...</div>
-                    </div>
-                    <div class="card" id="credit-limit">
-                        <h3>Credit Limit</h3>
-                        <div class="value">Loading...</div>
-                    </div>
-                    <div class="card" id="credit-remaining">
-                        <h3>Credits Remaining</h3>
+                    <div class="card" id="available-acus">
+                        <h3>Available ACUs</h3>
                         <div class="value">Loading...</div>
                     </div>
                 </div>
@@ -38,7 +30,24 @@
             
             <section class="usage-history">
                 <h2>Usage History</h2>
+                <div class="history-table-container">
+                    <table id="history-table" class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Session</th>
+                                <th>Created At</th>
+                                <th>ACUs Used</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="3" class="loading-message">Loading history data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
                 <div class="chart-container">
+                    <h3>ACUs Usage Trend</h3>
                     <canvas id="usage-chart"></canvas>
                 </div>
             </section>
